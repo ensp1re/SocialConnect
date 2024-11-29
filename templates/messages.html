@@ -1,0 +1,153 @@
+{% extends 'base.html' %} {% block title %}Messages - SocialConnect{% endblock
+%} {% block content %}
+<div class="container mt-4">
+  <div class="row">
+    <!-- Conversations List -->
+    <div class="col-md-4">
+      <h2 class="mb-4">Conversations</h2>
+      <div id="conversation-list" class="list-group">
+        {% for conversation in conversations %}
+        <div
+          class="conversation-item list-group-item d-flex align-items-center"
+          data-conversation-id="{{ conversation.id }}"
+          style="cursor: pointer; transition: background-color 0.3s ease"
+        >
+          {% if conversation.user1 == current_user %} {% set other_user =
+          conversation.user2 %} {% else %} {% set other_user =
+          conversation.user1 %} {% endif %}
+          <img
+            src="{{ url_for('static', filename='uploads/' + other_user.avatar) }}"
+            alt="{{ other_user.username }}"
+            class="avatar rounded-circle mr-3"
+            style="
+              width: 40px;
+              height: 40px;
+              object-fit: cover;
+              margin-right: 10px;
+            "
+          />
+          <span class="text-dark">{{ other_user.username }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Message Container -->
+    <div class="col-md-8">
+      <h2 id="conversation-title" class="text-muted">Select a conversation</h2>
+      <div
+        id="message-container"
+        class="border rounded p-3"
+        style="height: 400px; overflow-y: scroll"
+      >
+        <!-- Messages will be loaded here dynamically -->
+      </div>
+
+      <!-- Message Input Form -->
+      <form id="message-form" style="display: none" class="mt-4">
+        <div class="input-group">
+          <input
+            type="text"
+            id="message-input"
+            class="form-control"
+            placeholder="Type your message..."
+            aria-label="Message"
+            aria-describedby="send-button"
+            style="border-radius: 20px"
+          />
+          <button
+            type="submit"
+            class="btn btn-primary"
+            id="send-button"
+            style="border-radius: 20px"
+          >
+            Send
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  $(document).ready(function () {
+    let currentConversationId = null;
+
+    // Handle conversation click
+    $(".conversation-item").click(function () {
+      currentConversationId = $(this).data("conversation-id");
+      loadMessages(currentConversationId);
+      const username = $(this).find("span").text();
+      $("#conversation-title").text("Chat with " + username);
+    });
+
+    // Load messages for a selected conversation
+    function loadMessages(conversationId) {
+      $.ajax({
+        url: "/get_messages/" + conversationId,
+        method: "GET",
+        success: function (response) {
+          const messages = response.messages;
+          const messageContainer = $("#message-container");
+
+          messageContainer.empty();
+
+          messages.forEach(function (message) {
+            const messageHTML = `
+               <div class="message-item">
+            <div class="d-flex justify-content-between">
+              <a href="${message.profile_url}">
+                <strong>${message.sender_username}</strong>
+              </a>
+              <small class="text-muted">${message.timestamp}</small>
+            </div>
+            <p>${message.content}</p>
+          </div>
+
+              `;
+            messageContainer.append(messageHTML);
+          });
+
+          $("#message-form").show();
+
+          scrollToBottom();
+        },
+      });
+    }
+
+    function scrollToBottom() {
+      const container = document.getElementById("message-container");
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // Send a new message
+    $("#message-form").submit(function (e) {
+      e.preventDefault();
+      let content = $("#message-input").val();
+      if (content.trim() === "") return;
+
+      $.ajax({
+        url: "{{ url_for('send_message') }}",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+          conversation_id: currentConversationId,
+          content: content,
+        }),
+        success: function (response) {
+          if (response.success) {
+            $("#message-container").append(response.message);
+            $("#message-input").val("");
+            scrollToBottom();
+          }
+        },
+      });
+    });
+
+    function scrollToBottom() {
+      let container = $("#message-container");
+      container.scrollTop(container[0].scrollHeight);
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% for user in users %}
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="d-flex align-items-center">
+            <img src="{{ url_for('static', filename='uploads/' + user.avatar) }}" alt="{{ user.username }}" class="rounded-circle me-2" width="64" height="64">
+            <div>
+                <h5 class="card-title mb-0">
+                    <a href="{{ url_for('profile', user_id=user.id) }}" class="text-decoration-none">{{ user.username }}</a>
+                </h5>
+                <p class="card-text"><small class="text-muted">{{ user.bio[:100] }}{% if user.bio|length > 100 %}...{% endif %}</small></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}

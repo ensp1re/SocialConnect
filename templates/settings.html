@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Settings - SocialConnect{% endblock %}
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Settings</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Update Profile</h5>
+                    <form id="profile-form" enctype="multipart/form-data">
+                        {{ profile_form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ profile_form.username.label(class="form-label") }}
+                            {{ profile_form.username(class="form-control", value=current_user.username) }}
+                        </div>
+                        <div class="mb-3">
+                            {{ profile_form.bio.label(class="form-label") }}
+                            {{ profile_form.bio(class="form-control", rows="3", value=current_user.bio) }}
+                        </div>
+                        <div class="mb-3">
+                            {{ profile_form.avatar.label(class="form-label") }}
+                            {{ profile_form.avatar(class="form-control") }}
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Change Password</h5>
+                    <form id="password-form">
+                        {{ password_form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ password_form.current_password.label(class="form-label") }}
+                            {{ password_form.current_password(class="form-control") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ password_form.new_password.label(class="form-label") }}
+                            {{ password_form.new_password(class="form-control") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ password_form.confirm_password.label(class="form-label") }}
+                            {{ password_form.confirm_password(class="form-control") }}
+                        </div>
+                        <button type="submit" class="btn btn-primary">Change Password</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        $('#profile-form').submit(function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+
+            $.ajax({
+                url: "{{ url_for('update_profile') }}",
+                type: "POST",
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    if (response.success) {
+                        alert('Profile updated successfully!');
+                    } else {
+                        alert('Error updating profile: ' + response.message);
+                    }
+                }
+            });
+        });
+
+        $('#password-form').submit(function(e) {
+            e.preventDefault();
+
+            $.ajax({
+                url: "{{ url_for('change_password') }}",
+                type: "POST",
+                data: $(this).serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        alert('Password changed successfully!');
+                        $('#password-form')[0].reset();
+                    } else {
+                        alert('Error changing password: ' + response.message);
+                    }
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

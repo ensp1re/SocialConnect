@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Search Results - SocialConnect{% endblock %}
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Search Results for "{{ query }}"</h1>
+    
+    <h2>Users</h2>
+    {% if users %}
+        <div class="row">
+        {% for user in users %}
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <img src="{{ url_for('static', filename='uploads/' + user.avatar) }}" class="card-img-top" alt="{{ user.username }}'s avatar">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ user.username }}</h5>
+                        <p class="card-text">{{ user.bio[:100] }}{% if user.bio|length > 100 %}...{% endif %}</p>
+                        <a href="{{ url_for('profile', user_id=user.id) }}" class="btn btn-primary">View Profile</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        </div>
+    {% else %}
+        <p>No users found.</p>
+    {% endif %}
+
+    <h2>Posts</h2>
+    {% if posts %}
+        {% for post in posts %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a href="{{ url_for('profile', user_id=post.author.id) }}">{{ post.author.username }}</a>
+                    </h5>
+                    <p class="card-text">{{ post.content }}</p>
+                    <p class="card-text"><small class="text-muted">Posted on {{ post.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</small></p>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No posts found.</p>
+    {% endif %}
+</div>
+{% endblock %}

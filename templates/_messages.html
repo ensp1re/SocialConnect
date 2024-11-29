@@ -1,0 +1,42 @@
+{% for conversation in conversations %}
+<a
+  href="#"
+  class="list-group-item list-group-item-action conversation-item"
+  data-conversation-id="{{ conversation.id }}"
+>
+  {% if conversation.user1 == current_user %}
+    {% set other_user = conversation.user2 %}
+  {% else %}
+    {% set other_user = conversation.user1 %}
+  {% endif %}
+
+  <div class="d-flex align-items-center">
+    <img
+      src="{{ url_for('static', filename='uploads/' + other_user.avatar) }}"
+      alt="{{ other_user.username }}"
+      class="rounded-circle me-2"
+      width="32"
+      height="32"
+    />
+    <div>
+      <h6 class="mb-0">{{ other_user.username }}</h6>
+      <small class="text-muted">
+        {{ conversation.last_message_time.strftime('%Y-%m-%d %H:%M:%S') }}
+      </small>
+    </div>
+  </div>
+
+  <!-- Displaying the list of messages for each conversation -->
+  <div class="messages">
+    {% for message in messages %}
+      <div class="message-item">
+        <div class="d-flex justify-content-between">
+          <strong>{{ message.sender_username }}</strong>
+          <small class="text-muted">{{ message.timestamp }}</small>
+        </div>
+        <p>{{ message.content }}</p>
+      </div>
+    {% endfor %}
+  </div>
+</a>
+{% endfor %}

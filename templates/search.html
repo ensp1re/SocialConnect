@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Search - SocialConnect{% endblock %}
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Search</h1>
+    <form id="search-form" method="POST" action="{{ url_for('search') }}">
+        {{ form.hidden_tag() }}
+        <div class="input-group mb-3">
+            {{ form.query(class="form-control", placeholder="Search for users or posts...") }}
+            <button class="btn btn-primary" type="submit">Search</button>
+        </div>
+    </form>
+    <div id="search-results">
+        <div id="user-results"></div>
+        <div id="post-results"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        $('#search-form').submit(function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: "{{ url_for('search') }}",
+                method: "POST",
+                data: $(this).serialize(),
+                success: function(response) {
+                    $('#user-results').html(response.users);
+                    $('#post-results').html(response.posts);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

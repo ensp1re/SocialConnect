@@ -1,0 +1,113 @@
+{% extends 'base.html' %} {% block title %}{{ user.username }}'s Profile -
+SocialConnect{% endblock %} {% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-md-4">
+      <div class="card">
+        <img
+          src="{{ url_for('static', filename='uploads/' + user.avatar) }}"
+          class="card-img-top"
+          alt="{{ user.username }}'s avatar"
+        />
+        <div class="card-body">
+          <h5 class="card-title">{{ user.username }}</h5>
+          <p class="card-text">{{ user.bio or "No bio provided yet." }}</p>
+          {% if current_user.is_authenticated and current_user.id != user.id %}
+          <button
+            class="btn btn-primary"
+            id="follow-btn"
+            data-user-id="{{ user.id }}"
+          >
+            {% if is_following %} Unfollow {% else %} Follow {% endif %}
+          </button>
+          <button
+            class="btn btn-secondary"
+            id="start-conversation-btn"
+            data-user-id="{{ user.id }}"
+          >
+            Start Conversation
+          </button>
+          {% endif %}
+        </div>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item">
+            <strong>Followers:</strong>
+            <span id="followers-count">{{ user.followers.count() }}</span>
+          </li>
+          <li class="list-group-item">
+            <strong>Following:</strong>
+            <span id="following-count">{{ user.followed.count() }}</span>
+          </li>
+          <li class="list-group-item">
+            <strong>Posts:</strong> {{ user.posts.count() }}
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="col-md-8">
+      <h3>{{ user.username }}'s Posts</h3>
+      <div id="user-posts">
+        <!-- User posts will be loaded here dynamically -->
+      </div>
+      <button id="load-more-posts" class="btn btn-outline-primary mt-3">
+        Load More
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  $(document).ready(function () {
+    let page = 1;
+
+    function loadUserPosts() {
+      $.ajax({
+        url: "{{ url_for('get_user_posts', user_id=user.id) }}",
+        data: { page: page },
+        success: function (response) {
+          $("#user-posts").append(response);
+          page++;
+          if (response.trim() === "") {
+            $("#load-more-posts").hide();
+          }
+        },
+      });
+    }
+
+    loadUserPosts();
+
+    $("#load-more-posts").click(loadUserPosts);
+
+    $("#follow-btn").click(function () {
+      const userId = $(this).data("user-id");
+      $.ajax({
+        url: "{{ url_for('toggle_follow') }}",
+        type: "POST",
+        data: { user_id: userId },
+        success: function (response) {
+          if (response.success) {
+            $("#follow-btn").text(
+              response.action === "follow" ? "Unfollow" : "Follow"
+            );
+            $("#followers-count").text(response.followers_count);
+          }
+        },
+      });
+    });
+
+    $("#start-conversation-btn").click(function () {
+      const userId = $(this).data("user-id");
+      $.ajax({
+        url: "{{ url_for('start_conversation', user_id=user.id) }}",
+        type: "POST",
+        success: function (response) {
+          if (response.success) {
+            window.location.href =
+              "{{ url_for('messages') }}#" + response.conversation_id;
+          }
+        },
+      });
+    });
+  });
+</script>
+{% endblock %}
